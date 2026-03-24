@@ -2,53 +2,40 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
-import { isLegalMove } from '../lib/mapData'
 
-export default function Player() {
+export default function Player({ onMove }: { onMove: () => void }) {
   const mesh = useRef<THREE.Mesh>(null!)
   const { camera } = useThree()
-  const [pos] = useState(() => new THREE.Vector3(0, 1.5, 0))
-  const [keys, setKeys] = useState<Record<string, boolean>>({})
+  const [pos] = useState(() => new THREE.Vector3(0, 1.2, 0))
+  const curKeys = useRef<Record<string, boolean>>({})
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      setKeys(k => ({ ...k, [e.key.toLowerCase()]: true, [e.key.replace('Arrow', '').toLowerCase()]: true }))
-    }
-    const up = (e: KeyboardEvent) => {
-      setKeys(k => ({ ...k, [e.key.toLowerCase()]: false, [e.key.replace('Arrow', '').toLowerCase()]: false }))
-    }
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
+    const down = (e: KeyboardEvent) => { curKeys.current[e.key.toLowerCase()] = true; onMove() }
+    const up = (e: KeyboardEvent) => { curKeys.current[e.key.toLowerCase()] = false }
+    window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [])
+  }, [onMove])
 
-  useFrame((state, delta) => {
-    const speed = 15 * delta // Frame-rate independent speed
-    const nextPos = pos.clone()
-
-    if (keys.w || keys.up) nextPos.z -= speed
-    if (keys.s || keys.down) nextPos.z += speed
-    if (keys.a || keys.left) nextPos.x -= speed
-    if (keys.d || keys.right) nextPos.x += speed
-
-    // Only update if it's a valid part of the Peckham maze
-    if (isLegalMove(nextPos.x, nextPos.z)) {
-      pos.copy(nextPos)
-    }
+  useFrame(() => {
+    const speed = 0.6
+    if (curKeys.current['w'] || curKeys.current['arrowup']) pos.z -= speed
+    if (curKeys.current['s'] || curKeys.current['arrowdown']) pos.z += speed
+    if (curKeys.current['a'] || curKeys.current['arrowleft']) pos.x -= speed
+    if (curKeys.current['d'] || curKeys.current['arrowright']) pos.x += speed
 
     mesh.current.position.lerp(pos, 0.2)
     
-    // Smooth Isometric Camera Follow
-    const offset = new THREE.Vector3(60, 60, 60)
+    // Smooth Follow Cam
+    const offset = new THREE.Vector3(50, 50, 50)
     camera.position.lerp(pos.clone().add(offset), 0.1)
     camera.lookAt(mesh.current.position)
   })
 
   return (
     <mesh ref={mesh}>
-      <sphereGeometry args={[1.5, 32, 32]} />
-      <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
-      <pointLight intensity={20} distance={20} color="#fff" />
+      <sphereGeometry args={[1.2, 32, 32]} />
+      <meshStandardMaterial color="#ffffff" roughness={0.1} />
+      <pointLight intensity={10} distance={15} color="#ffffff" />
     </mesh>
   )
 }
