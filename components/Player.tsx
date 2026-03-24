@@ -18,24 +18,24 @@ export default function Player({ onMove }: { onMove: () => void }) {
 
   useFrame(() => {
     const speed = 0.6
-    if (curKeys.current['w'] || curKeys.current['arrowup']) pos.z -= speed
-    if (curKeys.current['s'] || curKeys.current['arrowdown']) pos.z += speed
-    if (curKeys.current['a'] || curKeys.current['arrowleft']) pos.x -= speed
-    if (curKeys.current['d'] || curKeys.current['arrowright']) pos.x += speed
+    const move = new THREE.Vector3(0, 0, 0)
+    if (curKeys.current['w'] || curKeys.current['arrowup']) move.z -= speed
+    if (curKeys.current['s'] || curKeys.current['arrowdown']) move.z += speed
+    if (curKeys.current['a'] || curKeys.current['arrowleft']) move.x -= speed
+    if (curKeys.current['d'] || curKeys.current['arrowright']) move.x += speed
 
+    pos.add(move)
     mesh.current.position.lerp(pos, 0.2)
     
-    // Smooth Follow Cam
-    const offset = new THREE.Vector3(50, 50, 50)
-    camera.position.lerp(pos.clone().add(offset), 0.1)
+    const camOffset = new THREE.Vector3(60, 60, 60)
+    camera.position.lerp(pos.clone().add(camOffset), 0.1)
     camera.lookAt(mesh.current.position)
   })
 
   return (
     <mesh ref={mesh}>
-      <sphereGeometry args={[1.2, 32, 32]} />
-      <meshStandardMaterial color="#ffffff" roughness={0.1} />
-      <pointLight intensity={10} distance={15} color="#ffffff" />
+      <sphereGeometry args={[1.5, 32, 32]} />
+      <meshLambertMaterial color="#ffffff" />
     </mesh>
   )
 }
