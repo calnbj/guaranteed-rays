@@ -7,15 +7,14 @@ export const mapNodes = [
   { x: 20, z: 20, type: 'road' },
   { x: -10, z: 40, type: 'road' },
   { x: -40, z: 50, type: 'pub', name: 'EDT', color: '#eaccad' },
-  // Adding some 'Park' nodes for the trees
   { x: -25, z: 80, type: 'park' },
   { x: -30, z: 90, type: 'pub', name: 'CLOCK HOUSE', color: '#b28dbe' },
 ]
 
 export const isLegalMove = (x: number, z: number) => {
+  // WIDENED RADIUS: 15 units instead of 7
   return mapNodes.some(node => {
-    const dx = Math.abs(node.x - x);
-    const dz = Math.abs(node.z - z);
-    return dx < 7 && dz < 7; // Generous walking path
+    const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.z - z, 2));
+    return distance < 15; 
   });
 }

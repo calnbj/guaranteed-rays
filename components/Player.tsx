@@ -7,50 +7,48 @@ import { isLegalMove } from '../lib/mapData'
 export default function Player() {
   const mesh = useRef<THREE.Mesh>(null!)
   const { camera } = useThree()
-  const [pos] = useState(() => new THREE.Vector3(0, 1, 0))
+  const [pos] = useState(() => new THREE.Vector3(0, 1.5, 0))
   const [keys, setKeys] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => setKeys(k => ({ ...k, [e.key]: true }))
-    const up = (e: KeyboardEvent) => setKeys(k => ({ ...k, [e.key]: false }))
-    window.addEventListener('keydown', down); window.addEventListener('keyup', up)
+    const down = (e: KeyboardEvent) => {
+      setKeys(k => ({ ...k, [e.key.toLowerCase()]: true, [e.key.replace('Arrow', '').toLowerCase()]: true }))
+    }
+    const up = (e: KeyboardEvent) => {
+      setKeys(k => ({ ...k, [e.key.toLowerCase()]: false, [e.key.replace('Arrow', '').toLowerCase()]: false }))
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   }, [])
 
-  useFrame(() => {
-    const speed = 0.5
-    const move = new THREE.Vector3(0, 0, 0)
-    if (keys.ArrowUp || keys.w) move.z -= speed
-    if (keys.ArrowDown || keys.s) move.z += speed
-    if (keys.ArrowLeft || keys.a) move.x -= speed
-    if (keys.ArrowRight || keys.d) move.x += speed
+  useFrame((state, delta) => {
+    const speed = 15 * delta // Frame-rate independent speed
+    const nextPos = pos.clone()
 
-    if (move.length() > 0) {
-      const nextX = pos.x + move.x
-      const nextZ = pos.z + move.z
-      
-      // Sliding Logic: Check X and Z independently so you don't 'stick' on corners
-      if (isLegalMove(nextX, nextZ)) {
-        pos.x = nextX
-        pos.z = nextZ
-      } else if (isLegalMove(nextX, pos.z)) {
-        pos.x = nextX
-      } else if (isLegalMove(pos.x, nextZ)) {
-        pos.z = nextZ
-      }
+    if (keys.w || keys.up) nextPos.z -= speed
+    if (keys.s || keys.down) nextPos.z += speed
+    if (keys.a || keys.left) nextPos.x -= speed
+    if (keys.d || keys.right) nextPos.x += speed
+
+    // Only update if it's a valid part of the Peckham maze
+    if (isLegalMove(nextPos.x, nextPos.z)) {
+      pos.copy(nextPos)
     }
 
     mesh.current.position.lerp(pos, 0.2)
-    // Locked Isometric Camera Angle
-    const camTarget = pos.clone().add(new THREE.Vector3(50, 50, 50))
-    camera.position.lerp(camTarget, 0.05)
-    camera.lookAt(pos)
+    
+    // Smooth Isometric Camera Follow
+    const offset = new THREE.Vector3(60, 60, 60)
+    camera.position.lerp(pos.clone().add(offset), 0.1)
+    camera.lookAt(mesh.current.position)
   })
 
   return (
-    <mesh ref={mesh} castShadow>
-      <sphereGeometry args={[1.2, 32, 32]} />
-      <meshLambertMaterial color="white" />
+    <mesh ref={mesh}>
+      <sphereGeometry args={[1.5, 32, 32]} />
+      <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
+      <pointLight intensity={20} distance={20} color="#fff" />
     </mesh>
   )
 }
