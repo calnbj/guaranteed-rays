@@ -1,6 +1,6 @@
 'use client'
 import { Canvas } from '@react-three/fiber'
-import { Float, Text, MeshDistortMaterial } from '@react-three/drei'
+import { Float, Text } from '@react-three/drei'
 import { Suspense } from 'react'
 import Player from './Player'
 import Path from './Path'
@@ -8,26 +8,27 @@ import Path from './Path'
 function Landmark({ position, name, color = "#5B5BFF" }) {
   return (
     <group position={position}>
-      <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
+      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.4}>
         <Text 
-          position={[0, 7, 0]} 
-          fontSize={1.8} 
+          position={[0, 8, 0]} 
+          fontSize={1.6} 
           color="white"
+          font="https://fonts.gstatic.com/s/raleway/v28/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaorCIPrQ.woff"
         >
           {name}
         </Text>
       </Float>
       
-      {/* THE BUILDING - Using MeshNormalMaterial for 'fake' 3D depth without lights */}
+      {/* THE BUILDING - Matte Porcelain Look */}
       <mesh position={[0, 3, 0]}>
         <boxGeometry args={[4, 6, 4]} />
-        <meshNormalMaterial />
+        <meshMatcapMaterial color="#eee" /> 
       </mesh>
 
-      {/* NEON ACCENT RING */}
+      {/* THE NEON BASE */}
       <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[4, 4.2, 64]} />
-        <meshBasicMaterial color={color} transparent opacity={0.9} />
+        <ringGeometry args={[4.2, 4.5, 64]} />
+        <meshBasicMaterial color={color} />
       </mesh>
     </group>
   )
@@ -35,28 +36,26 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
 
 export default function World() {
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505' }}>
-      <Canvas camera={{ fov: 35, position: [60, 60, 60] }}>
-        <color attach="background" args={['#050505']} />
-        
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#080808' }}>
+      <Canvas camera={{ fov: 30, position: [80, 80, 80] }}>
+        <color attach="background" args={['#080808']} />
         <Suspense fallback={null}>
           <Player />
           <Path />
 
-          {/* THE FLOOR - Static dark plane */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-            <planeGeometry args={[1000, 1000]} />
-            <meshBasicMaterial color="#0a0a0a" />
+          {/* THE FLOOR */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
+            <planeGeometry args={[2000, 2000]} />
+            <meshBasicMaterial color="#080808" />
           </mesh>
 
-          <Landmark position={[0, 0, 0]} name="VICTORIA" color="#5B5BFF" />
+          <Landmark position={[0, 0, 0]} name="THE VICTORIA" color="#5B5BFF" />
           <Landmark position={[10, 0, -20]} name="MONTPELIER" color="#FF5B5B" />
           <Landmark position={[35, 0, 30]} name="GOWLETT" color="#5BFF5B" />
           <Landmark position={[-40, 0, 50]} name="EDT" color="#FFFF5B" />
           <Landmark position={[-30, 0, 90]} name="CLOCK HOUSE" color="#FF5BFF" />
           <Landmark position={[-35, 0, 130]} name="HERNE" color="#5BFFFF" />
           <Landmark position={[80, 0, 100]} name="IVY HOUSE" color="#FFFFFF" />
-
         </Suspense>
       </Canvas>
     </div>
