@@ -1,6 +1,5 @@
 'use client'
 import { Text } from '@react-three/drei'
-import { any } from '../../lib/mapData'
 import { BASE_Y, TILE_W, darken } from './utils'
 
 export function RoadTile({ node }: { node: any }) {
@@ -53,7 +52,7 @@ export function ParkTile({ node }: { node: any }) {
   return (
     <group position={[node.x, 0, node.z]}>
       <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[3.82, 0.2, 3.82]} />
+        <boxGeometry args={[TILE_W, 0.2, TILE_W]} />
         <meshLambertMaterial color="#7ab368" />
       </mesh>
       <PaperTree offset={[0, 0.2, 0]} tint="#4a8a3a" />
