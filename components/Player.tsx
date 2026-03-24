@@ -1,45 +1,40 @@
 'use client'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useKeyboardControls } from '@react-three/drei'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import { isLegalMove } from '../lib/mapData'
 
 export default function Player() {
   const mesh = useRef<THREE.Mesh>(null!)
   const { camera } = useThree()
-  const [, getKeys] = useKeyboardControls()
   const [pos] = useState(() => new THREE.Vector3(0, 1, 0))
-  
-  const speed = 0.5
+  const [keys, setKeys] = useState({ w: false, s: false, a: false, d: false, Up: false, Down: false, Left: false, Right: false })
+
+  // Native JS keyboard listener (more reliable than wrappers)
+  useEffect(() => {
+    const handleDown = (e: KeyboardEvent) => setKeys(s => ({ ...s, [e.key.replace('Arrow', '')]: true, [e.key.toLowerCase()]: true }))
+    const handleUp = (e: KeyboardEvent) => setKeys(s => ({ ...s, [e.key.replace('Arrow', '')]: false, [e.key.toLowerCase()]: false }))
+    window.addEventListener('keydown', handleDown)
+    window.addEventListener('keyup', handleUp)
+    return () => { window.removeEventListener('keydown', handleDown); window.removeEventListener('keyup', handleUp) }
+  }, [])
+
+  const speed = 0.6
   const cameraOffset = new THREE.Vector3(30, 30, 30)
 
   useFrame(() => {
-    const { forward, backward, left, right } = getKeys()
+    const nextPos = pos.clone()
     
-    // 1. Calculate where the player WANTS to go
-    let dx = 0
-    let dz = 0
-    if (forward) dz -= speed
-    if (backward) dz += speed
-    if (left) dx -= speed
-    if (right) dx += speed
+    if (keys.w || keys.Up) nextPos.z -= speed
+    if (keys.s || keys.Down) nextPos.z += speed
+    if (keys.a || keys.Left) nextPos.x -= speed
+    if (keys.d || keys.Right) nextPos.x += speed
 
-    if (dx !== 0 || dz !== 0) {
-      const nextX = pos.x + dx
-      const nextZ = pos.z + dz
-
-      // 2. Only update the 'pos' if that specific coordinate is allowed
-      if (isLegalMove(nextX, nextZ)) {
-        pos.x = nextX
-        pos.z = nextZ
-      } else {
-        // Optional: log to browser console to verify it's working
-        // console.log("Wall hit at:", nextX, nextZ)
-      }
+    // Strict collision check
+    if (isLegalMove(nextPos.x, nextPos.z)) {
+      pos.copy(nextPos)
     }
 
-    // 3. Smoothly move the visual box and the camera
     mesh.current.position.lerp(pos, 0.2)
     camera.position.lerp(pos.clone().add(cameraOffset), 0.1)
     camera.lookAt(pos)
@@ -47,7 +42,7 @@ export default function Player() {
 
   return (
     <mesh ref={mesh}>
-      <boxGeometry args={[1, 2, 1]} />
+      <capsuleGeometry args={[0.5, 1, 4, 8]} />
       <meshBasicMaterial color="#5B5BFF" />
     </mesh>
   )
