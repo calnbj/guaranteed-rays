@@ -1,63 +1,54 @@
 'use client'
+import React from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
-import { Suspense, useEffect } from 'react'
-import Player from './Player'
-import { mapNodes } from '../lib/mapData'
-
-function Landmark({ node }) {
-  return (
-    <group position={[node.x, 0, node.z]}>
-      <Text position={[0, 10, 0]} fontSize={1.5} color="#4a4a4a" anchorY="middle">
-        {node.name}
-      </Text>
-      <mesh position={[0, 3, 0]}>
-        <boxGeometry args={[6, 6, 6]} />
-        <meshLambertMaterial color={node.color} />
-      </mesh>
-      <mesh position={[0, 7.5, 0]}>
-        <coneGeometry args={[4, 3, 4]} />
-        <meshLambertMaterial color={node.color} />
-      </mesh>
-    </group>
-  )
-}
+import { OrthographicCamera, OrbitControls, ContactShadows, Environment } from '@react-three/drei'
+import { Rays } from './Rays'
 
 export default function World() {
-  useEffect(() => { window.focus(); }, []);
-
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#e8e2d6' }}>
-      <Canvas camera={{ fov: 40, position: [60, 60, 60] }}>
-        <color attach="background" args={['#e8e2d6']} />
-        <ambientLight intensity={0.9} />
-        <directionalLight position={[10, 20, 10]} intensity={1.2} />
+    <div style={{ width: '100vw', height: '100vh', background: '#e8e2d6' }}>
+      <Canvas shadows dpr={[1, 2]}>
+        {/* 1. THE ISOMETRIC LENS: Parallel lines, no perspective distortion */}
+        <OrthographicCamera 
+          makeDefault 
+          position={[50, 50, 50]} 
+          zoom={50} 
+          near={0.1} 
+          far={1000} 
+        />
         
-        <Suspense fallback={null}>
-          <Player />
-          
-          {mapNodes.map((node, i) => (
-             <group key={i}>
-                {/* The Path Slab */}
-                <mesh position={[node.x, 0.1, node.z]}>
-                   <boxGeometry args={[12, 0.2, 12]} />
-                   <meshLambertMaterial color="#d1c7b7" />
-                </mesh>
-                
-                {/* Street Name Label */}
-                <Text 
-                  position={[node.x, 0.25, node.z + 7]} 
-                  rotation={[-Math.PI/2, 0, 0]} 
-                  fontSize={0.8} 
-                  color="#888"
-                >
-                  {node.street || ""}
-                </Text>
+        {/* 2. THE STUDIO LIGHTING: Warm, linen-toned atmosphere */}
+        <color attach="background" args={['#e8e2d6']} />
+        <ambientLight intensity={0.8} />
+        <directionalLight 
+          position={[10, 20, 10]} 
+          intensity={1.2} 
+          castShadow 
+          shadow-mapSize={[1024, 1024]}
+        />
+        <pointLight position={[-10, 10, -10]} intensity={0.5} color="#ffccaa" />
 
-                {node.type === 'pub' && <Landmark node={node} />}
-             </group>
-          ))}
-        </Suspense>
+        {/* 3. YOUR ACTUAL DATA: This renders your original Rays/Pubs */}
+        <group rotation={[0, -Math.PI / 4, 0]}>
+          <Rays />
+        </group>
+
+        {/* 4. THE GROUNDING: Soft shadows where buildings meet the floor */}
+        <ContactShadows 
+          position={[0, -0.01, 0]} 
+          opacity={0.4} 
+          scale={100} 
+          blur={2.5} 
+          far={10} 
+          color="#4a4030" 
+        />
+        
+        <OrbitControls 
+          enablePan={true} 
+          minZoom={30} 
+          maxZoom={100} 
+          makeDefault 
+        />
       </Canvas>
     </div>
   )
