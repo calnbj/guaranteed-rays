@@ -9,20 +9,15 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
   return (
     <group position={position}>
       <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.4}>
-        <Text 
-          position={[0, 8, 0]} 
-          fontSize={1.6} 
-          color="white"
-          font="https://fonts.gstatic.com/s/raleway/v28/1Ptxg8zYS_SKggPN4iEgvnHyvveLxVvaorCIPrQ.woff"
-        >
+        <Text position={[0, 8, 0]} fontSize={1.6} color="white">
           {name}
         </Text>
       </Float>
       
-      {/* THE BUILDING - Matte Porcelain Look */}
+      {/* THE BUILDING - Lambert reflects light simply, creating depth */}
       <mesh position={[0, 3, 0]}>
         <boxGeometry args={[4, 6, 4]} />
-        <meshMatcapMaterial color="#eee" /> 
+        <meshLambertMaterial color="#333333" /> 
       </mesh>
 
       {/* THE NEON BASE */}
@@ -37,8 +32,15 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
 export default function World() {
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#080808' }}>
-      <Canvas camera={{ fov: 30, position: [80, 80, 80] }}>
+      {/* Standard Canvas - No 'shadows' flag to avoid GPU crashes */}
+      <Canvas camera={{ fov: 35, position: [80, 80, 80] }}>
         <color attach="background" args={['#080808']} />
+        
+        {/* LIGHTING - The secret to the Monument Valley depth */}
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[10, 20, 10]} intensity={1.5} />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#5B5BFF" />
+
         <Suspense fallback={null}>
           <Player />
           <Path />
@@ -49,7 +51,7 @@ export default function World() {
             <meshBasicMaterial color="#080808" />
           </mesh>
 
-          <Landmark position={[0, 0, 0]} name="THE VICTORIA" color="#5B5BFF" />
+          <Landmark position={[0, 0, 0]} name="VICTORIA" color="#5B5BFF" />
           <Landmark position={[10, 0, -20]} name="MONTPELIER" color="#FF5B5B" />
           <Landmark position={[35, 0, 30]} name="GOWLETT" color="#5BFF5B" />
           <Landmark position={[-40, 0, 50]} name="EDT" color="#FFFF5B" />
