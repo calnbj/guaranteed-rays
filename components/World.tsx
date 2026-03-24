@@ -1,43 +1,29 @@
 'use client'
 import { Canvas } from '@react-three/fiber'
-import { Stars, Float, Text, ContactShadows, OrbitControls } from '@react-three/drei'
+import { Stars, OrbitControls, ContactShadows } from '@react-three/drei'
 import { Physics } from '@react-three/cannon'
 import { Suspense } from 'react'
 import Player from './Player'
 
-function Pub({ position, name, color = "#222" }) {
+function Pub({ position, color = "#222" }) {
   return (
-    <group position={position}>
-      <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
-        <Text
-          position={[0, 6, 0]}
-          fontSize={1.2}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {name}
-        </Text>
-      </Float>
-      <mesh position={[0, 2.5, 0]} castShadow>
-        <boxGeometry args={[4, 5, 4]} />
-        <meshStandardMaterial color={color} roughness={0.1} metalness={0.5} />
-      </mesh>
-      <pointLight position={[0, 2, 3]} intensity={10} color="#5B5BFF" distance={15} />
-    </group>
+    <mesh position={position} castShadow>
+      <boxGeometry args={[4, 8, 4]} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.2} />
+    </mesh>
   )
 }
 
 export default function World() {
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505' }}>
-      <Canvas shadows camera={{ position: [50, 50, 50], fov: 45 }}>
-        <Suspense fallback={<div style={{color: 'white'}}>Loading Peckham...</div>}>
+      <Canvas shadows camera={{ position: [80, 80, 80], fov: 45 }}>
+        <Suspense fallback={null}>
           <color attach="background" args={['#050505']} />
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 50, 10]} intensity={1.5} />
+          <ambientLight intensity={0.8} />
+          <pointLight position={[10, 50, 10]} intensity={2} castShadow />
           
-          <Physics gravity={[0, -9.81, 0]}>
+          <Physics>
             <Player />
             
             {/* THE FLOATING ISLAND */}
@@ -46,19 +32,20 @@ export default function World() {
               <meshStandardMaterial color="#111" />
             </mesh>
 
-            {/* PUB LOCATIONS */}
-            <Pub position={[0, 0, 0]} name="THE VICTORIA" color="#5B5BFF" />
-            <Pub position={[10, 0, -20]} name="THE MONTPELIER" />
-            <Pub position={[30, 0, 40]} name="THE GOWLETT" />
-            <Pub position={[-40, 0, 60]} name="EDT" />
-            <Pub position={[-30, 0, 100]} name="CLOCK HOUSE" />
-            <Pub position={[-35, 0, 150]} name="THE HERNE" />
-            <Pub position={[80, 0, 120]} name="THE IVY HOUSE" />
+            {/* PUB LOCATIONS (STABLE BLOCKS) */}
+            <Pub position={[0, 4, 0]} color="#5B5BFF" /> {/* VICTORIA */}
+            <Pub position={[10, 4, -20]} color="#333" /> {/* MONTPELIER */}
+            <Pub position={[30, 4, 40]} color="#333" />  {/* GOWLETT */}
+            <Pub position={[-40, 4, 60]} color="#333" /> {/* EDT */}
+            <Pub position={[-30, 4, 100]} color="#333" />{/* CLOCK HOUSE */}
+            <Pub position={[-35, 4, 150]} color="#333" />{/* HERNE */}
+            <Pub position={[80, 4, 120]} color="#333" /> {/* IVY HOUSE */}
             
           </Physics>
 
-          <OrbitControls makeDefault />
+          <OrbitControls />
           <Stars radius={100} depth={50} count={5000} factor={4} />
+          <ContactShadows opacity={0.4} scale={300} blur={1} far={10} resolution={256} color="#000000" />
         </Suspense>
       </Canvas>
     </div>
