@@ -1,6 +1,6 @@
 'use client'
 import { Canvas } from '@react-three/fiber'
-import { Float, Text, ContactShadows, Environment } from '@react-three/drei'
+import { Float, Text, MeshDistortMaterial } from '@react-three/drei'
 import { Suspense } from 'react'
 import Player from './Player'
 import Path from './Path'
@@ -13,16 +13,15 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
           position={[0, 7, 0]} 
           fontSize={1.8} 
           color="white"
-          font="https://fonts.gstatic.com/s/inter/v12/UcCOjFwrHDOn4lVTs3_v72os.woff2"
         >
           {name}
         </Text>
       </Float>
       
-      {/* THE BUILDING - Solid 'Clay' Look */}
-      <mesh position={[0, 3, 0]} castShadow>
+      {/* THE BUILDING - Using MeshNormalMaterial for 'fake' 3D depth without lights */}
+      <mesh position={[0, 3, 0]}>
         <boxGeometry args={[4, 6, 4]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.1} metalness={0.1} />
+        <meshNormalMaterial />
       </mesh>
 
       {/* NEON ACCENT RING */}
@@ -36,34 +35,19 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
 
 export default function World() {
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0a0a0a' }}>
-      <Canvas shadows camera={{ fov: 35, position: [60, 60, 60] }}>
-        <color attach="background" args={['#0a0a0a']} />
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505' }}>
+      <Canvas camera={{ fov: 35, position: [60, 60, 60] }}>
+        <color attach="background" args={['#050505']} />
         
         <Suspense fallback={null}>
-          {/* LIGHTING SETUP */}
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 20, 10]} intensity={1.5} castShadow />
-          <directionalLight position={[-10, 20, -10]} intensity={1} />
-          
           <Player />
           <Path />
 
-          {/* THE FLOOR */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
+          {/* THE FLOOR - Static dark plane */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
             <planeGeometry args={[1000, 1000]} />
-            <meshStandardMaterial color="#0a0a0a" roughness={0.5} />
+            <meshBasicMaterial color="#0a0a0a" />
           </mesh>
-
-          {/* SOFT SHADOWS UNDER EVERYTHING */}
-          <ContactShadows 
-            position={[0, 0, 0]} 
-            opacity={0.6} 
-            scale={200} 
-            blur={2.5} 
-            far={10} 
-            color="#000000" 
-          />
 
           <Landmark position={[0, 0, 0]} name="VICTORIA" color="#5B5BFF" />
           <Landmark position={[10, 0, -20]} name="MONTPELIER" color="#FF5B5B" />
