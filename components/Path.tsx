@@ -1,20 +1,21 @@
 'use client'
 import * as THREE from 'three'
 import { useMemo } from 'react'
-import { roads } from '../lib/mapData'
+import { mapNodes } from '../lib/mapData'
 
 export default function Path() {
   const points = useMemo(() => 
-    roads.map(r => new THREE.Vector3(r.x, 0.1, r.z)), 
-  [])
+    mapNodes.map(node => new THREE.Vector3(node.x, 0.2, node.z)), 
+  [mapNodes])
   
-  // Create a smooth curve through all pub coordinates
+  // Create a smooth curve through the map nodes
   const curve = useMemo(() => new THREE.CatmullRomCurve3(points), [points])
   
   return (
     <mesh>
-      <tubeGeometry args={[curve, 64, 0.3, 8, false]} />
-      <meshBasicMaterial color="#5B5BFF" transparent opacity={0.4} />
+      <tubeGeometry args={[curve, 64, 0.4, 8, false]} />
+      {/* A soft, stone-like color for the path connector */}
+      <meshLambertMaterial color="#c0b5a3" transparent opacity={0.8} />
     </mesh>
   )
 }
