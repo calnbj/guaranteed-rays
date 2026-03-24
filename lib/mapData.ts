@@ -1,5 +1,5 @@
 export const roads = [
-  { x: 0, z: 0 },   // Victoria Inn
+  { x: 0, z: 0 },   // Victoria
   { x: 0, z: -10 }, 
   { x: 10, z: -20 }, // Montpelier
   { x: 20, z: -20 }, 
@@ -13,9 +13,9 @@ export const roads = [
 ]
 
 export const isLegalMove = (x: number, z: number) => {
+  // We increase the check to 8 units to make the 'roads' feel walkable
   return roads.some(path => {
-    const dx = Math.abs(path.x - x);
-    const dz = Math.abs(path.z - z);
-    return dx < 6 && dz < 6; // Buffer for walking
+    const distance = Math.sqrt(Math.pow(path.x - x, 2) + Math.pow(path.z - z, 2));
+    return distance < 12; 
   });
 }
