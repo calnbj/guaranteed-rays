@@ -1,7 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 
-// We use dynamic loading to prevent SSR issues with Three.js
+// This loads the 3D world directly, no iframes, no localhost
 const World = dynamic(() => import('./components/World'), { ssr: false })
 
 export default function Home() {
