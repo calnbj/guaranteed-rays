@@ -2,14 +2,13 @@
 import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrthographicCamera, OrbitControls, ContactShadows } from '@react-three/drei'
-import { Path } from './Path'
-import { Player } from './Player'
+import Path from './Path'
+import Player from './Player'
 
 export default function World() {
   return (
     <div style={{ width: '100vw', height: '100vh', background: '#e8e2d6' }}>
       <Canvas shadows dpr={[1, 2]}>
-        {/* THE ISOMETRIC LENS */}
         <OrthographicCamera 
           makeDefault 
           position={[50, 50, 50]} 
@@ -27,7 +26,6 @@ export default function World() {
         />
         <pointLight position={[-10, 10, -10]} intensity={0.5} color="#ffccaa" />
 
-        {/* RECONNECTING YOUR ACTUAL DATA */}
         <group rotation={[0, -Math.PI / 4, 0]}>
           <Path />
           <Player />
