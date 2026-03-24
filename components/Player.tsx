@@ -18,32 +18,39 @@ export default function Player() {
   }, [])
 
   useFrame(() => {
+    const speed = 0.5
     const move = new THREE.Vector3(0, 0, 0)
-    if (keys.ArrowUp || keys.w) move.z -= 0.6
-    if (keys.ArrowDown || keys.s) move.z += 0.6
-    if (keys.ArrowLeft || keys.a) move.x -= 0.6
-    if (keys.ArrowRight || keys.d) move.x += 0.6
+    if (keys.ArrowUp || keys.w) move.z -= speed
+    if (keys.ArrowDown || keys.s) move.z += speed
+    if (keys.ArrowLeft || keys.a) move.x -= speed
+    if (keys.ArrowRight || keys.d) move.x += speed
 
-    const next = pos.clone().add(move)
-    // If we can move, move. If not, try just moving X or just moving Z (Sliding)
-    if (isLegalMove(next.x, next.z)) {
-      pos.copy(next)
-    } else if (isLegalMove(next.x, pos.z)) {
-      pos.x = next.x
-    } else if (isLegalMove(pos.x, next.z)) {
-      pos.z = next.z
+    if (move.length() > 0) {
+      const nextX = pos.x + move.x
+      const nextZ = pos.z + move.z
+      
+      // Sliding Logic: Check X and Z independently so you don't 'stick' on corners
+      if (isLegalMove(nextX, nextZ)) {
+        pos.x = nextX
+        pos.z = nextZ
+      } else if (isLegalMove(nextX, pos.z)) {
+        pos.x = nextX
+      } else if (isLegalMove(pos.x, nextZ)) {
+        pos.z = nextZ
+      }
     }
 
     mesh.current.position.lerp(pos, 0.2)
-    camera.position.lerp(pos.clone().add(new THREE.Vector3(40, 40, 40)), 0.1)
+    // Locked Isometric Camera Angle
+    const camTarget = pos.clone().add(new THREE.Vector3(50, 50, 50))
+    camera.position.lerp(camTarget, 0.05)
     camera.lookAt(pos)
   })
 
   return (
-    <mesh ref={mesh}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshStandardMaterial color="white" emissive="#5B5BFF" emissiveIntensity={2} />
-      <pointLight distance={10} intensity={2} color="#5B5BFF" />
+    <mesh ref={mesh} castShadow>
+      <sphereGeometry args={[1.2, 32, 32]} />
+      <meshLambertMaterial color="white" />
     </mesh>
   )
 }

@@ -3,27 +3,38 @@ import { Canvas } from '@react-three/fiber'
 import { Float, Text } from '@react-three/drei'
 import { Suspense } from 'react'
 import Player from './Player'
-import Path from './Path'
+import { mapNodes } from '../lib/mapData'
 
-function Landmark({ position, name, color = "#5B5BFF" }) {
+function DecorativeTree({ position }) {
   return (
     <group position={position}>
-      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.4}>
-        <Text position={[0, 8, 0]} fontSize={1.6} color="white">
-          {name}
-        </Text>
-      </Float>
-      
-      {/* THE BUILDING - Lambert reflects light simply, creating depth */}
-      <mesh position={[0, 3, 0]}>
-        <boxGeometry args={[4, 6, 4]} />
-        <meshLambertMaterial color="#333333" /> 
+      <mesh position={[0, 1.5, 0]}>
+        <coneGeometry args={[1.5, 4, 6]} />
+        <meshLambertMaterial color="#8fb98f" />
       </mesh>
+      <mesh position={[0, 0.5, 0]}>
+        <cylinderGeometry args={[0.3, 0.3, 1]} />
+        <meshLambertMaterial color="#8b5a2b" />
+      </mesh>
+    </group>
+  )
+}
 
-      {/* THE NEON BASE */}
-      <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[4.2, 4.5, 64]} />
-        <meshBasicMaterial color={color} />
+function Landmark({ node }) {
+  return (
+    <group position={[node.x, 0, node.z]}>
+      <Float speed={1.5} floatIntensity={0.3}>
+        <Text position={[0, 9, 0]} fontSize={1.8} color="#4a4a4a">{node.name}</Text>
+      </Float>
+      {/* THE BUILDING */}
+      <mesh position={[0, 3, 0]}>
+        <boxGeometry args={[5, 6, 5]} />
+        <meshLambertMaterial color={node.color} />
+      </mesh>
+      {/* DECORATIVE TOP */}
+      <mesh position={[0, 6.5, 0]}>
+        <cylinderGeometry args={[0, 2.5, 2, 4]} />
+        <meshLambertMaterial color={node.color} />
       </mesh>
     </group>
   )
@@ -31,33 +42,34 @@ function Landmark({ position, name, color = "#5B5BFF" }) {
 
 export default function World() {
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#080808' }}>
-      {/* Standard Canvas - No 'shadows' flag to avoid GPU crashes */}
-      <Canvas camera={{ fov: 35, position: [80, 80, 80] }}>
-        <color attach="background" args={['#080808']} />
-        
-        {/* LIGHTING - The secret to the Monument Valley depth */}
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#e8e2d6' }}>
+      <Canvas camera={{ fov: 30, position: [100, 100, 100] }}>
+        <color attach="background" args={['#e8e2d6']} />
         <ambientLight intensity={0.8} />
-        <directionalLight position={[10, 20, 10]} intensity={1.5} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#5B5BFF" />
-
+        <directionalLight position={[10, 20, 10]} intensity={1.2} />
+        
         <Suspense fallback={null}>
           <Player />
-          <Path />
+          
+          {/* THE PHYSICAL ROADS & BUILDINGS */}
+          {mapNodes.map((node, i) => (
+            <group key={i}>
+              {/* ROAD TILE */}
+              <mesh position={[node.x, 0.1, node.z]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[10, 10]} />
+                <meshLambertMaterial color="#d1c7b7" />
+              </mesh>
+              
+              {node.type === 'pub' && <Landmark node={node} />}
+              {node.type === 'park' && <DecorativeTree position={[node.x, 0, node.z]} />}
+            </group>
+          ))}
 
-          {/* THE FLOOR */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
+          {/* LARGE BASE PLATE */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
             <planeGeometry args={[2000, 2000]} />
-            <meshBasicMaterial color="#080808" />
+            <meshLambertMaterial color="#e8e2d6" />
           </mesh>
-
-          <Landmark position={[0, 0, 0]} name="VICTORIA" color="#5B5BFF" />
-          <Landmark position={[10, 0, -20]} name="MONTPELIER" color="#FF5B5B" />
-          <Landmark position={[35, 0, 30]} name="GOWLETT" color="#5BFF5B" />
-          <Landmark position={[-40, 0, 50]} name="EDT" color="#FFFF5B" />
-          <Landmark position={[-30, 0, 90]} name="CLOCK HOUSE" color="#FF5BFF" />
-          <Landmark position={[-35, 0, 130]} name="HERNE" color="#5BFFFF" />
-          <Landmark position={[80, 0, 100]} name="IVY HOUSE" color="#FFFFFF" />
         </Suspense>
       </Canvas>
     </div>
