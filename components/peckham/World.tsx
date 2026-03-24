@@ -3,8 +3,8 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { Landmark } from './Landmark'
 import { RoadTile, ParkTile } from './Environment'
-import Environment from './Environment'
-import { mapData } from '../../lib/mapData'
+import { RoadTile } from './Environment'
+import { mapNodes as mapData } from '../../lib/mapData'
 
 export default function World() {
   return (

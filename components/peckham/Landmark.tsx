@@ -1,9 +1,9 @@
 'use client'
 import { Text, Box } from '@react-three/drei'
-import { MapNode } from '../../lib/mapData'
+import { any } from '../../lib/mapData'
 import { BASE_Y, TILE_W } from './utils'
 
-export function Landmark({ node }: { node: MapNode }) {
+export function Landmark({ node }: { node: any }) {
   const levels = node.features?.levels || 1
   const heightPerLevel = 0.8
   

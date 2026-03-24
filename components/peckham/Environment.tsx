@@ -1,9 +1,9 @@
 'use client'
 import { Text } from '@react-three/drei'
-import { MapNode } from '../../lib/mapData'
+import { any } from '../../lib/mapData'
 import { BASE_Y, TILE_W, darken } from './utils'
 
-export function RoadTile({ node }: { node: MapNode }) {
+export function RoadTile({ node }: { node: any }) {
   return (
     <group position={[node.x, 0, node.z]}>
       <mesh position={[0, 0.01, 0]}>
@@ -45,6 +45,18 @@ export function PaperTree({ offset, tint = '#4a8a3a' }: { offset: [number, numbe
         <coneGeometry args={[0.43, 0.8, 6]} />
         <meshLambertMaterial color={tint} />
       </mesh>
+    </group>
+  )
+}
+
+export function ParkTile({ node }: { node: any }) {
+  return (
+    <group position={[node.x, 0, node.z]}>
+      <mesh position={[0, 0.1, 0]}>
+        <boxGeometry args={[3.82, 0.2, 3.82]} />
+        <meshLambertMaterial color="#7ab368" />
+      </mesh>
+      <PaperTree offset={[0, 0.2, 0]} tint="#4a8a3a" />
     </group>
   )
 }
