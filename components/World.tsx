@@ -1,51 +1,50 @@
 'use client'
 import { Canvas } from '@react-three/fiber'
-import { Stars, OrbitControls, ContactShadows } from '@react-three/drei'
+import { Stars, OrbitControls, Sky } from '@react-three/drei'
 import { Physics } from '@react-three/cannon'
 import { Suspense } from 'react'
 import Player from './Player'
 
 function Pub({ position, color = "#222" }) {
   return (
-    <mesh position={position} castShadow>
+    <mesh position={[position[0], 4, position[2]]}>
       <boxGeometry args={[4, 8, 4]} />
-      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.2} />
+      <meshStandardMaterial color={color} />
     </mesh>
   )
 }
 
 export default function World() {
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#050505' }}>
-      <Canvas shadows camera={{ position: [80, 80, 80], fov: 45 }}>
-        <Suspense fallback={null}>
-          <color attach="background" args={['#050505']} />
-          <ambientLight intensity={0.8} />
-          <pointLight position={[10, 50, 10]} intensity={2} castShadow />
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#111' }}>
+      <Canvas shadows camera={{ position: [100, 100, 100], fov: 50 }}>
+        <Suspense fallback={<div style={{color: 'white'}}>Loading 3D...</div>}>
+          {/* 1. FORCE VISIBILITY */}
+          <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25} />
+          <ambientLight intensity={1.0} />
+          <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow />
           
+          {/* 2. THE ISLAND (NON-PHYSICS FOR NOW TO ENSURE IT RENDERS) */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+            <circleGeometry args={[200, 64]} />
+            <meshStandardMaterial color="#222" />
+          </mesh>
+
+          {/* 3. THE PUBS */}
+          <Pub position={[0, 0, 0]} color="#5B5BFF" /> {/* VICTORIA */}
+          <Pub position={[20, 0, -30]} color="#444" /> {/* MONTPELIER */}
+          <Pub position={[40, 0, 40]} color="#444" />  {/* GOWLETT */}
+          <Pub position={[-50, 0, 70]} color="#444" /> {/* EDT */}
+          <Pub position={[-40, 0, 110]} color="#444" />{/* CLOCK HOUSE */}
+          <Pub position={[-45, 0, 160]} color="#444" />{/* HERNE */}
+          <Pub position={[100, 0, 130]} color="#444" />{/* IVY HOUSE */}
+
           <Physics>
             <Player />
-            
-            {/* THE FLOATING ISLAND */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-              <circleGeometry args={[150, 64]} />
-              <meshStandardMaterial color="#111" />
-            </mesh>
-
-            {/* PUB LOCATIONS (STABLE BLOCKS) */}
-            <Pub position={[0, 4, 0]} color="#5B5BFF" /> {/* VICTORIA */}
-            <Pub position={[10, 4, -20]} color="#333" /> {/* MONTPELIER */}
-            <Pub position={[30, 4, 40]} color="#333" />  {/* GOWLETT */}
-            <Pub position={[-40, 4, 60]} color="#333" /> {/* EDT */}
-            <Pub position={[-30, 4, 100]} color="#333" />{/* CLOCK HOUSE */}
-            <Pub position={[-35, 4, 150]} color="#333" />{/* HERNE */}
-            <Pub position={[80, 4, 120]} color="#333" /> {/* IVY HOUSE */}
-            
           </Physics>
 
           <OrbitControls />
           <Stars radius={100} depth={50} count={5000} factor={4} />
-          <ContactShadows opacity={0.4} scale={300} blur={1} far={10} resolution={256} color="#000000" />
         </Suspense>
       </Canvas>
     </div>
