@@ -8,42 +8,42 @@ export default function Player() {
   const mesh = useRef<THREE.Mesh>(null!)
   const { camera } = useThree()
   const [pos] = useState(() => new THREE.Vector3(0, 1, 0))
-  const [keys, setKeys] = useState({ w: false, s: false, a: false, d: false, Up: false, Down: false, Left: false, Right: false })
+  const [keys, setKeys] = useState<Record<string, boolean>>({})
 
-  // Native JS keyboard listener (more reliable than wrappers)
   useEffect(() => {
-    const handleDown = (e: KeyboardEvent) => setKeys(s => ({ ...s, [e.key.replace('Arrow', '')]: true, [e.key.toLowerCase()]: true }))
-    const handleUp = (e: KeyboardEvent) => setKeys(s => ({ ...s, [e.key.replace('Arrow', '')]: false, [e.key.toLowerCase()]: false }))
-    window.addEventListener('keydown', handleDown)
-    window.addEventListener('keyup', handleUp)
-    return () => { window.removeEventListener('keydown', handleDown); window.removeEventListener('keyup', handleUp) }
+    const down = (e: KeyboardEvent) => setKeys(k => ({ ...k, [e.key]: true }))
+    const up = (e: KeyboardEvent) => setKeys(k => ({ ...k, [e.key]: false }))
+    window.addEventListener('keydown', down); window.addEventListener('keyup', up)
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
   }, [])
 
-  const speed = 0.6
-  const cameraOffset = new THREE.Vector3(30, 30, 30)
-
   useFrame(() => {
-    const nextPos = pos.clone()
-    
-    if (keys.w || keys.Up) nextPos.z -= speed
-    if (keys.s || keys.Down) nextPos.z += speed
-    if (keys.a || keys.Left) nextPos.x -= speed
-    if (keys.d || keys.Right) nextPos.x += speed
+    const move = new THREE.Vector3(0, 0, 0)
+    if (keys.ArrowUp || keys.w) move.z -= 0.6
+    if (keys.ArrowDown || keys.s) move.z += 0.6
+    if (keys.ArrowLeft || keys.a) move.x -= 0.6
+    if (keys.ArrowRight || keys.d) move.x += 0.6
 
-    // Strict collision check
-    if (isLegalMove(nextPos.x, nextPos.z)) {
-      pos.copy(nextPos)
+    const next = pos.clone().add(move)
+    // If we can move, move. If not, try just moving X or just moving Z (Sliding)
+    if (isLegalMove(next.x, next.z)) {
+      pos.copy(next)
+    } else if (isLegalMove(next.x, pos.z)) {
+      pos.x = next.x
+    } else if (isLegalMove(pos.x, next.z)) {
+      pos.z = next.z
     }
 
     mesh.current.position.lerp(pos, 0.2)
-    camera.position.lerp(pos.clone().add(cameraOffset), 0.1)
+    camera.position.lerp(pos.clone().add(new THREE.Vector3(40, 40, 40)), 0.1)
     camera.lookAt(pos)
   })
 
   return (
     <mesh ref={mesh}>
-      <capsuleGeometry args={[0.5, 1, 4, 8]} />
-      <meshBasicMaterial color="#5B5BFF" />
+      <sphereGeometry args={[1, 16, 16]} />
+      <meshStandardMaterial color="white" emissive="#5B5BFF" emissiveIntensity={2} />
+      <pointLight distance={10} intensity={2} color="#5B5BFF" />
     </mesh>
   )
 }
