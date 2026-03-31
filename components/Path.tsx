@@ -1,92 +1,117 @@
 'use client'
 
 // =============================================================================
-// Path.tsx — Raised stone walkways / plinths connecting map nodes.
-// Uses mapEdges (explicit pairs) instead of sequential segments, enabling
-// true 90° corner turns in the road grid.
+// Path.tsx
+// Raised stone plinth segments built from mapEdges.
+// Each segment has a 3-layer slab (top cap, body, base trim) plus a
+// road-name label rendered flat on the top surface via drei <Text>.
 //
-// CONSTRAINTS: BoxGeometry only. MeshLambertMaterial only. No shadow maps.
+// CONSTRAINTS: BoxGeometry only. MeshLambertMaterial only. No shadows.
 // =============================================================================
 
 import { useMemo } from 'react'
-import * as THREE from 'three'
+import { Text }    from '@react-three/drei'
+import * as THREE  from 'three'
 import { mapNodes, mapEdges } from '../lib/mapData'
 
-const PLINTH_TOP  = '#ddd5c8'  // Pale limestone — top face
-const PLINTH_BODY = '#c8bfb2'  // Warm stone — vertical faces
-const PLINTH_BASE = '#b0a89a'  // Shadow tone — base trim
+// ── Plinth palette ────────────────────────────────────────────────────────────
+const TOP  = '#ddd5c8'   // pale limestone — catches light
+const BODY = '#c0b8ab'   // warm stone
+const BASE = '#a8a096'   // shadow-side trim
+
+const W = 4.5            // road width (world units)
+const H = 0.48           // plinth height
 
 // ---------------------------------------------------------------------------
-// Single plinth segment between two arbitrary world-space points
+// Single road plinth segment
 // ---------------------------------------------------------------------------
-function PlinthSegment({
-  from,
-  to,
-}: {
-  from: [number, number, number]
-  to:   [number, number, number]
-}) {
-  const { position, rotY, length } = useMemo(() => {
+
+interface SegProps {
+  from:  [number, number, number]
+  to:    [number, number, number]
+  label: string
+}
+
+function PlinthSegment({ from, to, label }: SegProps) {
+  const { mid, rotY, len } = useMemo(() => {
     const a   = new THREE.Vector3(...from)
     const b   = new THREE.Vector3(...to)
     const dir = new THREE.Vector3().subVectors(b, a)
-    const len = dir.length()
-    const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5)
     return {
-      position: mid.toArray() as [number, number, number],
-      rotY:     Math.atan2(dir.x, dir.z),
-      length:   len,
+      mid:  new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5).toArray() as [number,number,number],
+      rotY: Math.atan2(dir.x, dir.z),
+      len:  dir.length(),
     }
   }, [from, to])
 
-  const W = 4.5   // walkway width — proportional to node spacing of 12–40 units
-  const H = 0.45  // plinth height — physical volume, not a flat line
-  const L = length
-
   return (
-    <group position={position} rotation={[0, rotY, 0]}>
-      {/* Top surface — lightest, catches the directional light */}
-      <mesh position={[0, H * 0.5 + 0.03, 0]}>
-        <boxGeometry args={[W - 0.4, 0.05, L]} />
-        <meshLambertMaterial color={PLINTH_TOP} />
+    <group position={mid} rotation={[0, rotY, 0]}>
+
+      {/* ── Top cap — lightest, catches directional light */}
+      <mesh position={[0, H * 0.5 + 0.015, 0]}>
+        <boxGeometry args={[W - 0.1, 0.04, len]} />
+        <meshLambertMaterial color={TOP} />
       </mesh>
-      {/* Main plinth body */}
-      <mesh>
-        <boxGeometry args={[W, H, L]} />
-        <meshLambertMaterial color={PLINTH_BODY} />
+
+      {/* ── Main body */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[W, H, len]} />
+        <meshLambertMaterial color={BODY} />
       </mesh>
-      {/* Base trim — slightly wider, darkest */}
+
+      {/* ── Base trim — slightly wider, darkest tone */}
       <mesh position={[0, -H * 0.5 + 0.05, 0]}>
-        <boxGeometry args={[W + 0.8, 0.12, L + 0.3]} />
-        <meshLambertMaterial color={PLINTH_BASE} />
+        <boxGeometry args={[W + 0.12, 0.1, len + 0.06]} />
+        <meshLambertMaterial color={BASE} />
       </mesh>
+
+
+      {/* ── Road name label flat on top surface */}
+      {label && len > 10 && (
+        <Text
+          position={[0, H * 0.5 + 0.06, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={1.1}
+          color="#8c8278"
+          anchorX="center"
+          anchorY="middle"
+          letterSpacing={0.12}
+          maxWidth={len - 1}
+        >
+          {label}
+        </Text>
+      )}
+
     </group>
   )
 }
 
 // ---------------------------------------------------------------------------
-// PathNetwork — resolves mapEdges to world positions and renders each segment
+// PathNetwork — resolves mapEdges to world positions and renders all segments
 // ---------------------------------------------------------------------------
-export default function Path() {
-  const segments = useMemo(() => {
-    const nodeMap: Record<string, [number, number, number]> = {}
-    mapNodes.forEach(n => { nodeMap[n.id] = [n.x, 0, n.z] })
 
-    return mapEdges
-      .map(([a, b]) => {
-        const from = nodeMap[a]
-        const to   = nodeMap[b]
-        if (!from || !to) return null
-        return { from, to }
-      })
-      .filter(Boolean) as { from: [number,number,number]; to: [number,number,number] }[]
+export default function Path() {
+  const nodeMap = useMemo(() => {
+    const m: Record<string, [number, number, number]> = {}
+    mapNodes.forEach(n => { m[n.id] = [n.x, 0, n.z] })
+    return m
   }, [])
 
   return (
     <group name="path-network">
-      {segments.map(({ from, to }, i) => (
-        <PlinthSegment key={i} from={from} to={to} />
-      ))}
+      {mapEdges.map(([a, b, roadName], i) => {
+        const from = nodeMap[a]
+        const to   = nodeMap[b]
+        if (!from || !to) return null
+        return (
+          <PlinthSegment
+            key={`path-${i}`}
+            from={from}
+            to={to}
+            label={roadName}
+          />
+        )
+      })}
     </group>
   )
 }

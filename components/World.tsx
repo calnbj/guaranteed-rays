@@ -1,280 +1,352 @@
 'use client'
 
-// =============================================================================
-// World.tsx — Monument Valley diorama with Peckham maze, Rye plateau,
-// geometric foliage, and atmospheric fog.
-//
-// CONSTRAINTS: MeshLambertMaterial only. No shadow maps. No ContactShadows.
-// AmbientLight(0.7) + DirectionalLight(1.2) at [10,20,10].
-// Geometry: BoxGeometry / CylinderGeometry / ConeGeometry only.
-// =============================================================================
-
-import { Canvas }   from '@react-three/fiber'
-import { Suspense, useEffect } from 'react'
-import Player          from './Player'
-import Path            from './Path'
+import React, { Suspense } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import { OrthographicCamera } from '@react-three/drei'
+import { MeshLambertMaterial, BoxGeometry, CylinderGeometry, ConeGeometry } from 'three'
+import Player from './Player'
+import Path from './Path'
 import PubArchitecture from './PubArchitecture'
-import { mapNodes }    from '../lib/mapData'
+import { mapNodes, PARK_BOUNDS } from '../lib/mapData'
+import type { MapNode } from '../lib/mapData'
 
-// ---------------------------------------------------------------------------
-// Name → PubArchitecture key
-// ---------------------------------------------------------------------------
-function getPubName(name: string): string {
-  const map: Record<string, string> = {
-    'THE VICTORIA': 'victoria',
-    'MONTPELIER':   'montpelier',
-    'GOWLETT':      'gowlett',
-    'CLOCK HOUSE':  'clockhouse',
-  }
-  return map[name] ?? 'default'
-}
-
-// ---------------------------------------------------------------------------
-// GROUND — large base plane + subtle stone-tile slabs under each node
-// ---------------------------------------------------------------------------
+// Ground component: base terrain with park plateau
 function Ground() {
   return (
-    <>
-      {/* World floor */}
-      <mesh position={[0, -0.08, 40]}>
-        <boxGeometry args={[220, 0.14, 240]} />
-        <meshLambertMaterial color="#ccc5b8" />
+    <group name="ground">
+      {/* Main ground plane */}
+      <mesh position={[0, -0.1, 0]}>
+        <boxGeometry args={[400, 0.2, 400]} />
+        <meshLambertMaterial color="#c8c2b6" />
       </mesh>
-      {/* Per-node stone slabs */}
-      {mapNodes.map((node, i) => (
-        <mesh key={i} position={[node.x, -0.04, node.z]}>
-          <boxGeometry args={[16, 0.05, 16]} />
-          <meshLambertMaterial color={i % 2 === 0 ? '#cac3b6' : '#d2cbc0'} />
-        </mesh>
-      ))}
-    </>
+
+      {/* Park plateau - first layer */}
+      <mesh position={[0, 0.3, 0]}>
+        <boxGeometry args={[92, 0.6, 58]} />
+        <meshLambertMaterial color="#7aad6a" />
+      </mesh>
+
+      {/* Park plateau - second depth layer */}
+      <mesh position={[0, 0.7, 0]}>
+        <boxGeometry args={[88, 0.4, 54]} />
+        <meshLambertMaterial color="#8abd7a" />
+      </mesh>
+
+      {/* Park center darker grass */}
+      <mesh position={[0, 1.1, 0]}>
+        <boxGeometry args={[60, 0.2, 36]} />
+        <meshLambertMaterial color="#5a9a5a" />
+      </mesh>
+    </group>
   )
 }
 
+// ParkFence component: perimeter fence with gate openings
+function ParkFence() {
+  const fenceColor = '#6a5a3a'
+  const pillarColor = '#c8c0b0'
 
-// ---------------------------------------------------------------------------
-// TREE — abstract geometric foliage: 3 stacked ConeGeometry tiers
-// on a CylinderGeometry trunk. Scale prop allows size variation.
-// ---------------------------------------------------------------------------
+  return (
+    <group name="park-fence">
+      {/* North edge (z=-28) split at gate_n */}
+      {/* West section rail */}
+      <mesh position={[-24, 1.4, -28]}>
+        <boxGeometry args={[42, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[-24, 0.85, -28]}>
+        <boxGeometry args={[42, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* East section rail */}
+      <mesh position={[24, 1.4, -28]}>
+        <boxGeometry args={[42, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[24, 0.85, -28]}>
+        <boxGeometry args={[42, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* North gate pillars */}
+      <mesh position={[-3, 0, -28]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+      <mesh position={[3, 0, -28]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+
+      {/* South edge (z=28) split at gate_s */}
+      {/* West section rail */}
+      <mesh position={[-28.5, 1.4, 28]}>
+        <boxGeometry args={[33, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[-28.5, 0.85, 28]}>
+        <boxGeometry args={[33, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* East section rail */}
+      <mesh position={[20.5, 1.4, 28]}>
+        <boxGeometry args={[49, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[20.5, 0.85, 28]}>
+        <boxGeometry args={[49, 0.15, 0.25]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* South gate pillars */}
+      <mesh position={[-10, 0, 28]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+      <mesh position={[-6, 0, 28]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+
+      {/* West edge (x=-45) split at gate_w */}
+      {/* North section rail */}
+      <mesh position={[-45, 1.4, -13.5]}>
+        <boxGeometry args={[0.25, 0.15, 29]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[-45, 0.85, -13.5]}>
+        <boxGeometry args={[0.25, 0.15, 29]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* South section rail */}
+      <mesh position={[-45, 1.4, 18.5]}>
+        <boxGeometry args={[0.25, 0.15, 19]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[-45, 0.85, 18.5]}>
+        <boxGeometry args={[0.25, 0.15, 19]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* West gate pillars */}
+      <mesh position={[-45, 0, 3]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+      <mesh position={[-45, 0, 7]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+
+      {/* East edge (x=45) split at gate_e */}
+      {/* North section rail */}
+      <mesh position={[45, 1.4, -13.5]}>
+        <boxGeometry args={[0.25, 0.15, 29]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[45, 0.85, -13.5]}>
+        <boxGeometry args={[0.25, 0.15, 29]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* South section rail */}
+      <mesh position={[45, 1.4, 18.5]}>
+        <boxGeometry args={[0.25, 0.15, 19]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+      <mesh position={[45, 0.85, 18.5]}>
+        <boxGeometry args={[0.25, 0.15, 19]} />
+        <meshLambertMaterial color={fenceColor} />
+      </mesh>
+
+      {/* East gate pillars */}
+      <mesh position={[45, 0, 3]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+      <mesh position={[45, 0, 7]}>
+        <boxGeometry args={[1.2, 2.8, 1.2]} />
+        <meshLambertMaterial color={pillarColor} />
+      </mesh>
+    </group>
+  )
+}
+
+// Tree component: geometric foliage with cone tiers and cylinder trunk
 function Tree({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
   const s = scale
+
   return (
-    <group position={position}>
+    <group position={position} name="tree">
       {/* Trunk */}
-      <mesh position={[0, 1.5 * s, 0]}>
-        <cylinderGeometry args={[0.28 * s, 0.42 * s, 3.0 * s, 6]} />
-        <meshLambertMaterial color="#5c3d1e" />
+      <mesh position={[0, 0.75 * s, 0]}>
+        <cylinderGeometry args={[0.25 * s, 0.25 * s, 1.5 * s, 8]} />
+        <meshLambertMaterial color="#5a4020" />
       </mesh>
-      {/* Foliage tier 1 — widest, lowest */}
-      <mesh position={[0, 4.2 * s, 0]}>
-        <coneGeometry args={[3.2 * s, 3.8 * s, 7]} />
-        <meshLambertMaterial color="#3a6b44" />
+
+      {/* Tier 1 (bottom) */}
+      <mesh position={[0, 2.5 * s, 0]}>
+        <coneGeometry args={[2.2 * s, 2.0 * s, 16]} />
+        <meshLambertMaterial color="#4a8a3a" />
       </mesh>
-      {/* Foliage tier 2 — mid */}
-      <mesh position={[0, 6.4 * s, 0]}>
-        <coneGeometry args={[2.3 * s, 3.2 * s, 7]} />
-        <meshLambertMaterial color="#4a8055" />
+
+      {/* Tier 2 (middle) */}
+      <mesh position={[0, 3.8 * s, 0]}>
+        <coneGeometry args={[1.7 * s, 1.8 * s, 16]} />
+        <meshLambertMaterial color="#5a9a48" />
       </mesh>
-      {/* Foliage tier 3 — narrowest, top */}
-      <mesh position={[0, 8.3 * s, 0]}>
-        <coneGeometry args={[1.4 * s, 2.6 * s, 7]} />
-        <meshLambertMaterial color="#3a6b44" />
+
+      {/* Tier 3 (top) */}
+      <mesh position={[0, 5.0 * s, 0]}>
+        <coneGeometry args={[1.1 * s, 1.6 * s, 16]} />
+        <meshLambertMaterial color="#6aaa58" />
       </mesh>
     </group>
   )
 }
 
-// ---------------------------------------------------------------------------
-// PECKHAM RYE — raised green plateau with tree clusters.
-// Positioned at the south end of the map, accessible via Barry Rd corner.
-// Built from BoxGeometry slabs only (no PlaneGeometry).
-// ---------------------------------------------------------------------------
-function PeckhamRye() {
-  return (
-    <group name="peckham-rye">
-      {/* Outer border / plinth — darkest green, gives the plateau an edge */}
-      <mesh position={[-15, 0.22, 85]}>
-        <boxGeometry args={[58, 0.44, 44]} />
-        <meshLambertMaterial color="#2d5032" />
-      </mesh>
-      {/* Main plateau body */}
-      <mesh position={[-15, 0.62, 85]}>
-        <boxGeometry args={[54, 0.8, 40]} />
-        <meshLambertMaterial color="#3d6640" />
-      </mesh>
-      {/* Top grass surface — slightly lighter */}
-      <mesh position={[-15, 1.08, 85]}>
-        <boxGeometry args={[53, 0.1, 39]} />
-        <meshLambertMaterial color="#4a7c50" />
-      </mesh>
-      {/* Scattered path across the park — stone strip */}
-      <mesh position={[-15, 1.1, 85]}>
-        <boxGeometry args={[2.5, 0.06, 36]} />
-        <meshLambertMaterial color="#c8bfb2" />
-      </mesh>
+// Park trees array
+const parkTrees: [[number, number, number], number][] = [
+  [[-28, 0, -18], 1.1],
+  [[-15, 0, 10], 0.9],
+  [[-35, 0, 5], 1.2],
+  [[20, 0, -15], 1.0],
+  [[35, 0, 10], 0.85],
+  [[10, 0, 18], 1.1],
+  [[-20, 0, 20], 0.95],
+  [[28, 0, -8], 1.0],
+  [[-8, 0, -20], 0.9],
+  [[15, 0, 5], 1.2],
+  [[-30, 0, -8], 1.0],
+  [[38, 0, -15], 0.85],
+]
 
-      {/* Tree cluster — varied scales for natural silhouette */}
-      <Tree position={[-30, 1.1, 76]} scale={1.1} />
-      <Tree position={[-22, 1.1, 80]} scale={0.82} />
-      <Tree position={[-10, 1.1, 77]} scale={1.0} />
-      <Tree position={[-4,  1.1, 86]} scale={0.75} />
-      <Tree position={[-26, 1.1, 91]} scale={0.9} />
-      <Tree position={[-36, 1.1, 88]} scale={1.2} />
-      <Tree position={[0,   1.1, 82]} scale={0.7} />
-      <Tree position={[-18, 1.1, 94]} scale={0.85} />
-      <Tree position={[-8,  1.1, 92]} scale={1.05} />
-    </group>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// BACKGROUND BLOCK — urban filler building with window grid.
-// Positioned to line the actual road corridors, not scattered randomly.
-// ---------------------------------------------------------------------------
+// BgBlock component: simple background building
 interface BgBlockProps {
   position: [number, number, number]
-  w: number; d: number; h: number; color: string
-  windows?: boolean
+  w: number
+  d: number
+  h: number
+  color: string
 }
 
-function BgBlock({ position, w, d, h, color, windows = true }: BgBlockProps) {
-  const rows = Math.max(1, Math.floor(h / 3.8))
-  const cols = Math.max(1, Math.floor(w / 3.8))
+function BgBlock({ position, w, d, h, color }: BgBlockProps) {
   return (
-    <group position={position}>
-      <mesh position={[0, h / 2, 0]}>
+    <group position={position} name="bg-building">
+      {/* Main block */}
+      <mesh>
         <boxGeometry args={[w, h, d]} />
         <meshLambertMaterial color={color} />
       </mesh>
-      {/* Flat roof parapet */}
-      <mesh position={[0, h + 0.28, 0]}>
-        <boxGeometry args={[w + 0.5, 0.5, d + 0.5]} />
-        <meshLambertMaterial color="#a8a098" />
+
+      {/* Roof trim */}
+      <mesh position={[0, h / 2, 0]}>
+        <boxGeometry args={[w + 0.2, 0.15, d + 0.2]} />
+        <meshLambertMaterial color="#a8a8a0" />
       </mesh>
+
       {/* Window grid on front face */}
-      {windows && Array.from({ length: rows }).map((_, r) =>
-        Array.from({ length: cols }).map((_, c) => (
-          <mesh
-            key={`${r}-${c}`}
-            position={[
-              (c - (cols - 1) / 2) * (w / cols),
-              (r + 0.6) * (h / rows),
-              d / 2 + 0.06,
-            ]}
-          >
-            <boxGeometry args={[0.85, 1.2, 0.16]} />
-            <meshLambertMaterial color="#1e2d52" />
-          </mesh>
-        ))
+      {Array.from({ length: 4 }).map((_, row) =>
+        Array.from({ length: 4 }).map((_, col) => {
+          const startY = h * 0.2
+          const windowSpacing = h * 0.15
+          const yPos = startY + row * windowSpacing
+          const xSpacing = w * 0.2
+          const xPos = -w / 2 + w * 0.15 + col * xSpacing
+
+          return (
+            <mesh key={`window-${row}-${col}`} position={[xPos, yPos, d / 2 + 0.05]}>
+              <boxGeometry args={[0.3, 0.4, 0.08]} />
+              <meshLambertMaterial color="#1e2d52" />
+            </mesh>
+          )
+        })
       )}
     </group>
   )
 }
 
-// Background blocks aligned to the actual road grid corridors:
-// — North/south of Choumert Rd (z=0)
-// — East/west of Bellenden Rd (x=0)
-// — Around the Gowlett/Adys areas
-const bgBlocks: BgBlockProps[] = [
-  // Choumert Rd — north side (z = -9 to -14)
-  { position: [-22, 0, -10], w: 8,  d: 5, h: 9,  color: '#b8bfc8' },
-  { position: [-6,  0, -10], w: 6,  d: 4, h: 7,  color: '#c4bcb2' },
-  { position: [12,  0, -10], w: 7,  d: 5, h: 11, color: '#b0b8c0' },
-  { position: [32,  0, -10], w: 6,  d: 4, h: 8,  color: '#c0c8b8' },
-  { position: [52,  0, -10], w: 8,  d: 5, h: 10, color: '#b8c0ca' },
-  // Choumert Rd — south side (z = 9 to 14)
-  { position: [-22, 0,  10], w: 7,  d: 4, h: 7,  color: '#c8c0b2' },
-  { position: [-5,  0,  10], w: 6,  d: 4, h: 9,  color: '#bec6c2' },
-  { position: [12,  0,  10], w: 8,  d: 5, h: 6,  color: '#c4c0b8' },
-  { position: [32,  0,  10], w: 6,  d: 4, h: 10, color: '#b8bcc4' },
-  // Bellenden Rd — east side (x = 8)
-  { position: [9,   0,  34], w: 5,  d: 4, h: 8,  color: '#c0b8c4' },
-  { position: [9,   0,  60], w: 6,  d: 4, h: 7,  color: '#bcc4c0' },
-  // Bellenden Rd — west side (x = -8)
-  { position: [-9,  0,  34], w: 5,  d: 4, h: 9,  color: '#c8bfb2' },
-  { position: [-9,  0,  60], w: 6,  d: 4, h: 6,  color: '#b8c0bc' },
-  // Around Gowlett Arms
-  { position: [52,  0,  -2], w: 7,  d: 4, h: 8,  color: '#c4bcb0' },
-  { position: [52,  0, -20], w: 6,  d: 4, h: 11, color: '#b8bfc8' },
-  // Around Adys Rd / EDT
-  { position: [-55, 0,  42], w: 8,  d: 4, h: 12, color: '#bcc4c0' },
-  { position: [-55, 0,  58], w: 7,  d: 4, h: 8,  color: '#c8bfb2' },
-  // South corridor to Rye
-  { position: [10,  0,  90], w: 6,  d: 4, h: 7,  color: '#c0b8c4' },
-  { position: [-10, 0, 102], w: 7,  d: 4, h: 9,  color: '#b8c4bc' },
-  // Street trees along Choumert Rd (no windows — just tree stubs)
-  { position: [-18, 0, -5],  w: 1,  d: 1, h: 0.5, color: '#7a9a70', windows: false },
-  { position: [8,   0, -5],  w: 1,  d: 1, h: 0.5, color: '#7a9a70', windows: false },
+// Background buildings array
+const bgBuildings: { pos: [number, number]; w: number; d: number; h: number; color: string }[] = [
+  { pos: [8, -130], w: 5, d: 5, h: 9, color: '#b8c0c8' },
+  { pos: [-8, -130], w: 4, d: 5, h: 11, color: '#c0b8b0' },
+  { pos: [8, -115], w: 4, d: 4, h: 7, color: '#b0b8c0' },
+  { pos: [6, -90], w: 3, d: 4, h: 8, color: '#c0bab2' },
+  { pos: [-6, -90], w: 3.5, d: 4, h: 9, color: '#b8b0a8' },
+  { pos: [55, -55], w: 4, d: 4, h: 8, color: '#b8c0ba' },
+  { pos: [55, -65], w: 3, d: 4, h: 10, color: '#c0b8c0' },
+  { pos: [75, -55], w: 4, d: 4, h: 7, color: '#b8b8c0' },
+  { pos: [-55, -90], w: 4, d: 4, h: 9, color: '#c0c0b8' },
+  { pos: [-55, -70], w: 3.5, d: 4, h: 8, color: '#b8bcc0' },
+  { pos: [-30, 55], w: 4, d: 4, h: 7, color: '#c0b8b8' },
+  { pos: [-10, 60], w: 3.5, d: 4, h: 9, color: '#b8c0b8' },
+  { pos: [8, -55], w: 3, d: 4, h: 8, color: '#c0bab8' },
+  { pos: [-8, -55], w: 3.5, d: 4, h: 10, color: '#b8c0c0' },
 ]
 
-// Street trees along Bellenden Rd and Choumert
-const streetTrees: { p: [number, number, number]; s: number }[] = [
-  { p: [-18, 0,  -4], s: 0.55 }, { p: [10,  0,  -4], s: 0.6  },
-  { p: [28,  0,  -4], s: 0.5  }, { p: [-6,  0,  -4], s: 0.58 },
-  { p: [4,   0,  35], s: 0.52 }, { p: [4,   0,  62], s: 0.55 },
-  { p: [-4,  0,  35], s: 0.48 }, { p: [-4,  0,  62], s: 0.5  },
-]
-
-// ---------------------------------------------------------------------------
-// LANDMARK — single project-spec wrapper around PubArchitecture
-// ---------------------------------------------------------------------------
-function Landmark({ node }: { node: typeof mapNodes[0] }) {
+// Landmark component: wraps PubArchitecture per project spec
+function Landmark({ node }: { node: MapNode }) {
   return (
-    <group position={[node.x, 0, node.z]} name={`landmark-${node.name}`}>
-      <PubArchitecture pubName={getPubName(node.name)} />
+    <group position={[node.x, 0, node.z]} name={`landmark-${node.id}`}>
+      <PubArchitecture pubName={node.id} />
     </group>
   )
 }
 
-// ---------------------------------------------------------------------------
-// ROOT EXPORT
-// ---------------------------------------------------------------------------
-export default function World() {
-  useEffect(() => { window.focus() }, [])
-
+// Scene component: main world render
+function Scene() {
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: '#e8e2d6' }}>
+    <>
+      <color attach="background" args={['#e8e2d6']} />
+      <fog attach="fog" args={['#e8e2d6', 160, 380]} />
+      <ambientLight intensity={0.7} />
+      <directionalLight intensity={1.2} position={[10, 20, 10]} />
+      
+      <Suspense fallback={null}>
+        <Player />
+        <Ground />
+        <ParkFence />
+        <Path />
+        
+        {parkTrees.map(([pos, s], i) => (
+          <Tree key={i} position={pos as [number, number, number]} scale={s as number} />
+        ))}
+        
+        {bgBuildings.map((b, i) => (
+          <BgBlock
+            key={i}
+            position={[b.pos[0], 0, b.pos[1]]}
+            w={b.w}
+            d={b.d}
+            h={b.h}
+            color={b.color}
+          />
+        ))}
+        
+        {mapNodes
+          .filter(n => n.type === 'pub')
+          .map(node => (
+            <Landmark key={node.id} node={node} />
+          ))}
+      </Suspense>
+    </>
+  )
+}
+
+// Default export: main World component
+export default function World() {
+  return (
+    <div style={{ width: '100%', height: '100vh', background: '#e8e2d6' }}>
       <Canvas
         orthographic
         camera={{ zoom: 45, position: [50, 50, 50], near: 0.1, far: 1400 }}
-        style={{ background: '#e8e2d6' }}
         shadows={false}
         gl={{ antialias: true }}
       >
-        {/* Background colour + atmospheric fog — fades world edge into mist */}
-        <color attach="background" args={['#e8e2d6']} />
-        <fog attach="fog" args={['#e8e2d6', 110, 280]} />
-
-        {/* Lighting — AmbientLight(0.7) + single DirectionalLight(1.2) */}
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[10, 20, 10]} intensity={1.2} />
-
-        <Suspense fallback={null}>
-          {/* Player — WASD camera-follow useFrame preserved exactly */}
-          <Player />
-
-          <Ground />
-          <PeckhamRye />
-          <Path />
-
-          {/* Background architecture — road-aligned urban blocks */}
-          <group name="background-architecture">
-            {bgBlocks.map((b, i) => <BgBlock key={i} {...b} />)}
-          </group>
-
-          {/* Street trees lining Choumert and Bellenden */}
-          <group name="street-trees">
-            {streetTrees.map(({ p, s }, i) => <Tree key={i} position={p} scale={s} />)}
-          </group>
-
-          {/* Pub landmarks — Victoria is the hero at [0,0,0] */}
-          <group name="landmarks">
-            {mapNodes
-              .filter(n => n.type === 'pub')
-              .map((node, i) => <Landmark key={i} node={node} />)
-            }
-          </group>
-        </Suspense>
+        <Scene />
       </Canvas>
     </div>
   )
