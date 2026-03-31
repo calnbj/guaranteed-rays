@@ -8,7 +8,7 @@ function Win({ x, y, z, w=1.2, h=1.6, d=0.12, color='#1e2d52' }) {
 }
 
 // Window with lighter surround trim
-function WinTrim({ x, y, z, w=1.2, h=1.6, d=0.12 }) {
+function WinTrim({ x, y, z, w, h, d, color }: any) {
   return (
     <group position={[x,y,z]}>
       {/* Surround */}
@@ -97,9 +97,8 @@ function Victoria() {
       
       {/* Roof cornice band bay */}
       <mesh position={[-4.5, 16.2, -5]}><boxGeometry args={[5.8, 0.8, 10.4]}/><meshLambertMaterial color="#e8d8c8"/></mesh>
-    </group>
-  )
-}      {/* Chimneys on roof */}
+      
+      {/* Chimneys on roof */}
       <mesh position={[-2, 15.5, -4.2]}><cylinderGeometry args={[0.35, 0.35, 1.8]}/><meshLambertMaterial color="#b86838"/></mesh>
       <mesh position={[2, 15.5, -4.2]}><cylinderGeometry args={[0.35, 0.35, 1.8]}/><meshLambertMaterial color="#b86838"/></mesh>
       <mesh position={[-4.5, 16.8, -4.2]}><cylinderGeometry args={[0.3, 0.3, 1.6]}/><meshLambertMaterial color="#b86838"/></mesh>
@@ -133,9 +132,8 @@ function Victoria() {
       <WinTrim x={-0.5} y={4.5} z={-5.1} w={2} h={2} />
       <WinTrim x={3} y={4.5} z={-5.1} w={2} h={2} />
       <WinTrim x={6} y={4.5} z={-5.1} w={1.8} h={2} />
-    </group>
-  )
-}      {/* Ground floor window - bay */}
+      
+      {/* Ground floor window - bay */}
       <WinTrim x={-4.5} y={4.2} z={-5.1} w={1.8} h={2.2} />
       
       {/* Pub sign - large, mounted high on front */}
@@ -177,9 +175,8 @@ function Gowlett() {
       {/* Roof cornice */}
       <mesh position={[0, 8.5, -4]}><boxGeometry args={[10.6, 0.6, 8.6]}/><meshLambertMaterial color="#d4b8a8"/></mesh>
       <mesh position={[-3.5, 8.5, -6]}><boxGeometry args={[7.6, 0.6, 5.6]}/><meshLambertMaterial color="#d4b8a8"/></mesh>
-    </group>
-  )
-}      {/* Corner chimney */}
+      
+      {/* Corner chimney */}
       <mesh position={[-3.5, 8.8, -3.8]}><cylinderGeometry args={[0.35, 0.35, 1.6]}/><meshLambertMaterial color="#a05840"/></mesh>
       
       {/* Ground floor pub windows - main block (3 large) */}
@@ -231,9 +228,8 @@ function Montpelier() {
       
       {/* Roof cornice */}
       <mesh position={[0, 11.8, -3.5]}><boxGeometry args={[8.4, 0.6, 7.4]}/><meshLambertMaterial color="#e8e0d0"/></mesh>
-    </group>
-  )
-}      {/* Teal/green hanging flower baskets on brackets (3 per floor, 2 floors) */}
+      
+      {/* Teal/green hanging flower baskets on brackets (3 per floor, 2 floors) */}
       <group position={[-3, 9.5, -3.6]}>
         <mesh><boxGeometry args={[0.08, 0.2, 0.3]}/><meshLambertMaterial color="#5a4a3a"/></mesh>
         <mesh position={[0, -0.4, 0]}><cylinderGeometry args={[0.35, 0.35, 0.4]}/><meshLambertMaterial color="#4a9a6a"/></mesh>
@@ -279,9 +275,8 @@ function Montpelier() {
       <WinTrim x={-2.5} y={10.5} z={-3.6} w={1} h={1.4} />
       <WinTrim x={0} y={10.5} z={-3.6} w={1} h={1.4} />
       <WinTrim x={2.5} y={10.5} z={-3.6} w={1} h={1.4} />
-    </group>
-  )
-}      {/* Pub sign - 'THE MONTPELIER' in gold on navy */}
+      
+      {/* Pub sign - 'THE MONTPELIER' in gold on navy */}
       <PubSign text="THE MONTPELIER" color="#2d3e6a" x={-1} y={9} z={-3.7} />
       
       {/* Steps at front */}
@@ -324,9 +319,8 @@ function Clockhouse() {
       
       {/* Tower clock face - ivory disc on front */}
       <mesh position={[6, 9, -2.2]}><cylinderGeometry args={[1.5, 1.5, 0.2]}/><meshLambertMaterial color="#f0ece4"/></mesh>
-    </group>
-  )
-}      {/* Clock numerals - 12 small boxes for roman numerals */}
+      
+      {/* Clock numerals - 12 small boxes for roman numerals */}
       {/* 12 position */}
       <mesh position={[6, 10.3, -2.2]}><boxGeometry args={[0.15, 0.3, 0.08]}/><meshLambertMaterial color="#5a7a7e"/></mesh>
       {/* 3 position */}
@@ -372,9 +366,8 @@ function EDT() {
       {/* Decorative quoins at corners */}
       <mesh position={[-5.2, 4.5, 0]}><boxGeometry args={[0.4, 9, 0.3]}/><meshLambertMaterial color="#f0e8d8"/></mesh>
       <mesh position={[5.2, 4.5, 0]}><boxGeometry args={[0.4, 9, 0.3]}/><meshLambertMaterial color="#f0e8d8"/></mesh>
-    </group>
-  )
-}      {/* Ground floor windows (3 large pub windows) */}
+      
+      {/* Ground floor windows (3 large pub windows) */}
       <WinTrim x={-3.5} y={3.2} z={-4.1} w={2} h={2.4} />
       <WinTrim x={0} y={3.2} z={-4.1} w={2} h={2.4} />
       <WinTrim x={3.5} y={3.2} z={-4.1} w={2} h={2.4} />
