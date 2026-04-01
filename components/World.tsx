@@ -300,10 +300,18 @@ function Landmark({ node }: { node: MapNode }) {
 function Scene() {
   return (
     <>
-      <color attach="background" args={['#e8e2d6']} />
-      <fog attach="fog" args={['#e8e2d6', 160, 380]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight intensity={1.2} position={[10, 20, 10]} />
+      <color attach="background" args={['#ddd8cc']} />
+      <fog attach="fog" args={['#ddd8cc', 160, 400]} />
+      {/* Soft global ambient — kept low so pub point lights pop */}
+      <ambientLight intensity={0.55} color="#fdf4e8" />
+      {/* Key directional light — angled for isometric depth */}
+      <directionalLight
+        intensity={1.05}
+        position={[12, 28, 14]}
+        color="#fff5e0"
+      />
+      {/* Subtle cool fill from opposite side (sky bounce) */}
+      <directionalLight intensity={0.28} position={[-8, 12, -10]} color="#c0d4f0" />
       
       <Suspense fallback={null}>
         <Player />
