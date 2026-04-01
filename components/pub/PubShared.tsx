@@ -179,7 +179,7 @@ export function ArchedWindow({
     return shape
   }, [w, h])
 
-  const extrudeSettings = useMemo<THREE.ExtrudeGeometryParameters>(() => ({
+  const extrudeSettings = useMemo<THREE.ExtrudeGeometryOptions>(() => ({
     depth: d * 0.55,
     bevelEnabled: true,
     bevelThickness: 0.04,
@@ -187,7 +187,7 @@ export function ArchedWindow({
     bevelSegments: 3,
   }), [d])
 
-  const glassExtrudeSettings = useMemo<THREE.ExtrudeGeometryParameters>(() => ({
+  const glassExtrudeSettings = useMemo<THREE.ExtrudeGeometryOptions>(() => ({
     depth: d * 0.18,
     bevelEnabled: false,
   }), [d])
