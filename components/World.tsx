@@ -1,13 +1,12 @@
 'use client'
 
 import React, { Suspense } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrthographicCamera } from '@react-three/drei'
-import { MeshLambertMaterial, BoxGeometry, CylinderGeometry, ConeGeometry } from 'three'
+import { Canvas } from '@react-three/fiber'
+
 import Player from './Player'
 import Path from './Path'
 import PubArchitecture from './PubArchitecture'
-import { mapNodes, PARK_BOUNDS } from '../lib/mapData'
+import { mapNodes } from '../lib/mapData'
 import type { MapNode } from '../lib/mapData'
 
 // Ground component: base terrain with park plateau
@@ -309,6 +308,14 @@ function Scene() {
         intensity={1.05}
         position={[12, 28, 14]}
         color="#fff5e0"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-near={1}
+        shadow-camera-far={300}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
       />
       {/* Subtle cool fill from opposite side (sky bounce) */}
       <directionalLight intensity={0.28} position={[-8, 12, -10]} color="#c0d4f0" />
@@ -351,7 +358,7 @@ export default function World() {
       <Canvas
         orthographic
         camera={{ zoom: 45, position: [50, 50, 50], near: 0.1, far: 1400 }}
-        shadows={false}
+        shadows="soft"
         gl={{ antialias: true }}
       >
         <Scene />
