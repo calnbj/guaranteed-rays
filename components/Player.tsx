@@ -33,6 +33,7 @@ export default function Player() {
   const pos      = useRef(new THREE.Vector3(0, 0, 0))
   const keys     = useRef<Record<string, boolean>>({})
   const moving   = useRef(false)
+  const camYaw   = useRef(0)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => { keys.current[e.key.toLowerCase()] = true  }
@@ -87,10 +88,22 @@ export default function Player() {
     if (lLegRef.current)  lLegRef.current.rotation.x  = -swing
     if (rLegRef.current)  rLegRef.current.rotation.x  =  swing
 
-    // Camera follow
-    const camTarget = group.current.position.clone().add(new THREE.Vector3(50, 50, 50))
-    camera.position.lerp(camTarget, 0.1)
-    camera.lookAt(group.current.position)
+    // Third-person camera: smooth follow behind player
+    const CAM_DIST = 28, CAM_H = 14
+    const facingYaw = group.current.rotation.y
+    let yawDiff = facingYaw - camYaw.current
+    while (yawDiff >  Math.PI) yawDiff -= Math.PI * 2
+    while (yawDiff < -Math.PI) yawDiff += Math.PI * 2
+    camYaw.current += yawDiff * Math.min(1, delta * 5)
+
+    const gp = group.current.position
+    const camTarget = new THREE.Vector3(
+      gp.x - Math.sin(camYaw.current) * CAM_DIST,
+      CAM_H,
+      gp.z - Math.cos(camYaw.current) * CAM_DIST,
+    )
+    camera.position.lerp(camTarget, Math.min(1, delta * 8))
+    camera.lookAt(gp.x, 3, gp.z)
   })
 
   // ── Character geometry — all BoxGeometry, pivot groups for limb rotation ──
