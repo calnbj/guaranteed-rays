@@ -357,7 +357,7 @@ export default function World() {
     <div style={{ width: '100%', height: '100vh', background: '#e8e2d6' }}>
       <Canvas
         orthographic
-        camera={{ zoom: 45, position: [50, 50, 50], near: 0.1, far: 1400 }}
+        camera={{ zoom: 40, position: [20, 20, 20], near: 0.1, far: 1400 }}
         shadows="soft"
         gl={{ antialias: true }}
       >

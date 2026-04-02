@@ -26,18 +26,21 @@ import React from 'react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import each hero asset so they split cleanly
-const Victoria   = dynamic(() => import('./pub/Victoria'),   { ssr: false })
-const Skehans    = dynamic(() => import('./pub/Skehans'),    { ssr: false })
-const Gowlett    = dynamic(() => import('./pub/Gowlett'),    { ssr: false })
-const Montpelier = dynamic(() => import('./pub/Montpelier'), { ssr: false })
-const Clockhouse = dynamic(() => import('./pub/Clockhouse'), { ssr: false })
-const EDT        = dynamic(() => import('./pub/EDT'),        { ssr: false })
+// STATIC IMPORT (Forces the new 'Clay' look to load immediately)
+import VictoriaHF from './pub/Victoria_HighFidelity'
+
+// These stay dynamic for now
+const Skehans    = dynamic(() => import('./pub/hero_v3/Skehans'),    { ssr: false })
+const Gowlett    = dynamic(() => import('./pub/hero_v3/Gowlett'),    { ssr: false })
+const Montpelier = dynamic(() => import('./pub/hero_v3/Montpelier'), { ssr: false })
+const Clockhouse = dynamic(() => import('./pub/hero_v3/Clockhouse'), { ssr: false })
+const EDT        = dynamic(() => import('./pub/hero_v3/EDT'),        { ssr: false })
 
 // ─────────────────────────────────────────────────────────
 // Route table  — maps mapData node IDs → Hero components
 // ─────────────────────────────────────────────────────────
 const PUB_MAP: Record<string, React.ComponentType> = {
-  victoria:   Victoria,
+  victoria:   VictoriaHF,
   gowlett:    Gowlett,
   skehans:    Skehans,
   montpelier: Montpelier,
